@@ -339,6 +339,7 @@ namespace NodeLibcurl {
     #endif
 
         { "RESUME_FROM", CURLOPT_RESUME_FROM },
+        { "RESUME_UNTIL", 13370 },
 
     #if NODE_LIBCURL_VER_GE( 7, 20, 0 )
         { "RTSP_CLIENT_CSEQ", CURLOPT_RTSP_CLIENT_CSEQ },
@@ -417,7 +418,8 @@ namespace NodeLibcurl {
         { "MAX_RECV_SPEED_LARGE", CURLOPT_MAX_RECV_SPEED_LARGE },
         { "MAX_SEND_SPEED_LARGE", CURLOPT_MAX_SEND_SPEED_LARGE },
         { "POSTFIELDSIZE_LARGE", CURLOPT_POSTFIELDSIZE_LARGE },
-        { "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE }
+        { "RESUME_FROM_LARGE", CURLOPT_RESUME_FROM_LARGE },
+        { "RESUME_UNTIL_LARGE", 13371 }
     };
 
     const std::vector<CurlConstant> curlOptionString = {

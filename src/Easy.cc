@@ -336,7 +336,18 @@ namespace NodeLibcurl {
 
             // get the offset
             curl_off_t offset = obj->readDataOffset;
+            curl_off_t end = obj->readDataEnd;
             if  ( offset >= 0 ){
+                if ( end >= 0 ) {
+                    // don't read too much
+                    if ( offset >= end ) {
+                        return 0;
+                    }
+                    if ( end < ( offset + static_cast<curl_off_t>( n ) ) ) {
+                        n = static_cast<size_t>( end - offset );
+                    }
+                }
+
                 // increment it for the next read
                 obj->readDataOffset += n;
             }
@@ -1148,6 +1159,13 @@ namespace NodeLibcurl {
                 case CURLOPT_POSTFIELDSIZE_LARGE:
                 case CURLOPT_RESUME_FROM_LARGE:
                     setOptRetCode = curl_easy_setopt( obj->ch, static_cast<CURLoption>( optionId ), static_cast<curl_off_t>( value->NumberValue() ) );
+                    break;
+                case 13370: // CURLOPT_RESUME_FROM_UNTIL
+                    obj->readDataEnd = static_cast<long>( value->Int32Value() );
+                    setOptRetCode = CURLE_OK;
+                case 13371: // CURLOPT_RESUME_FROM_UNTIL_LARGE
+                    obj->readDataEnd = static_cast<curl_off_t>( value->NumberValue() );
+                    setOptRetCode = CURLE_OK;
                     break;
                 //special case with READDATA, since we need to store the file descriptor and not overwrite the READDATA already set in the handle.
                 case CURLOPT_READDATA:

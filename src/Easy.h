@@ -80,6 +80,7 @@ namespace NodeLibcurl {
 
         int32_t readDataFileDescriptor = -1; // READDATA sets that
         curl_off_t readDataOffset = -1; // SEEKDATA sets that
+        curl_off_t readDataEnd = -1; // users can set that from "CURLOPT_RESUME_FROM_UNTIL(_LARGE)"
         uint32_t id = counter++;
 
         // static methods
