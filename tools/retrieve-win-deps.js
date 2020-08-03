@@ -55,7 +55,7 @@ const execConfig = {
 const depsGypTarget = 'curl-for-windows/curl.gyp:libcurl'
 
 const fileWithDepsTag = 'LIBCURL_VERSION_WIN_DEPS'
-const depsRepo = 'https://github.com/JCMais/curl-for-windows.git'
+const depsRepo = 'https://github.com/mart-jansink/curl-for-windows.git'
 const envCurlForWindowsDepsVersionTag = process.env.NODE_LIBCURL_WINDEPS_TAG
 
 const cleanupAndExit = (code = 0) => {
