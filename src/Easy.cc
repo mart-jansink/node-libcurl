@@ -1410,11 +1410,8 @@ NAN_METHOD(Easy::SetOpt) {
                              static_cast<curl_off_t>(Nan::To<double>(value).FromJust()));
         break;
       case 13370: // CURLOPT_RESUME_UNTIL
-        obj->readDataEnd = static_cast<long>(value->Int32Value());
-        setOptRetCode = CURLE_OK;
-        break;
       case 13371: // CURLOPT_RESUME_UNTIL_LARGE
-        obj->readDataEnd = static_cast<curl_off_t>(value->NumberValue());
+        obj->readDataEnd = static_cast<curl_off_t>(Nan::To<double>(value).FromJust());
         setOptRetCode = CURLE_OK;
         break;
       // special case with READDATA, since we need to store the file descriptor
