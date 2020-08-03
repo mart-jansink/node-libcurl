@@ -68,7 +68,7 @@
                   'OmitFramePointers': 'true',
                   'EnableFunctionLevelLinking': 'true',
                   'EnableIntrinsicFunctions': 'true',
-                  'WarnAsError': 'true'
+                  'WarnAsError': 'false'
                 }
               }
             },
