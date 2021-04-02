@@ -892,7 +892,11 @@ int Easy::CbProgress(void* clientp, double dltotal, double dlnow, double ultotal
     returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
   }
 
+#if NODE_LIBCURL_VER_GE(7, 68, 0)
+  if (returnValue && returnValue != CURL_PROGRESSFUNC_CONTINUE) {
+#else
   if (returnValue) {
+#endif
     obj->isCbProgressAlreadyAborted = true;
   }
 
@@ -1038,7 +1042,11 @@ int Easy::CbXferinfo(void* clientp, curl_off_t dltotal, curl_off_t dlnow, curl_o
     returnValue = Nan::To<int32_t>(returnValueCallback.ToLocalChecked()).FromJust();
   }
 
+#if NODE_LIBCURL_VER_GE(7, 68, 0)
+  if (returnValue && returnValue != CURL_PROGRESSFUNC_CONTINUE) {
+#else
   if (returnValue) {
+#endif
     obj->isCbProgressAlreadyAborted = true;
   }
 
@@ -1156,6 +1164,9 @@ NAN_METHOD(Easy::SetOpt) {
   CURLcode setOptRetCode = CURLE_UNKNOWN_OPTION;
 
   int optionId;
+
+  // See this: https://daniel.haxx.se/blog/2020/08/28/enabling-better-curl-bindings/
+  // we probably could use these here for newer libcurl versions...
 
   if ((optionId = IsInsideCurlConstantStruct(curlOptionNotImplemented, opt))) {
     Nan::ThrowError(
@@ -1701,6 +1712,8 @@ NAN_METHOD(Easy::GetInfo) {
 #if NODE_LIBCURL_VER_GE(7, 45, 0)
     curl_socket_t socket;
 #else
+    // this should never really used tho, as it's only possible to have
+    // an curlInfoSocket value with libcurl >= 7.45.0
     long socket;  // NOLINT(runtime/int)
 #endif
     code = curl_easy_getinfo(obj->ch, static_cast<CURLINFO>(infoId), &socket);
@@ -1709,6 +1722,7 @@ NAN_METHOD(Easy::GetInfo) {
       // curl_socket_t is of type SOCKET on Windows,
       //  casting it to int32_t can be dangerous, only if Microsoft ever decides
       //  to change the underlying architecture behind it.
+      // https://stackoverflow.com/a/26496808/710693
       retVal = Nan::New<v8::Integer>(static_cast<int32_t>(socket));
     }
 
@@ -1718,33 +1732,73 @@ NAN_METHOD(Easy::GetInfo) {
     curl_slist* curr;
 
     curlInfo = static_cast<CURLINFO>(infoId);
-    code = curl_easy_getinfo(obj->ch, curlInfo, &linkedList);
+    if (curlInfo == CURLINFO_CERTINFO) {
+      curl_certinfo* ci = NULL;
+      code = curl_easy_getinfo(obj->ch, curlInfo, &ci);
 
-    if (code == CURLE_OK) {
-      v8::Local<v8::Array> arr = Nan::New<v8::Array>();
-      bool isValid = true;
+      if (code == CURLE_OK) {
+        v8::Local<v8::Array> arr = Nan::New<v8::Array>();
+        bool isValid = true;
 
-      if (linkedList) {
-        curr = linkedList;
+        for (int i = 0; i < ci->num_of_certs; i++) {
+          linkedList = ci->certinfo[i];
 
-        while (curr) {
-          auto value = arr->Set(arr->CreationContext(), arr->Length(),
-                                Nan::New<v8::String>(curr->data).ToLocalChecked());
-          if (value.IsJust()) {
-            curr = curr->next;
-          } else {
-            curr = NULL;
-            isValid = false;
+          if (linkedList) {
+            curr = linkedList;
+
+            while (curr) {
+              auto value = arr->Set(arr->CreationContext(), arr->Length(),
+                                    Nan::New<v8::String>(curr->data).ToLocalChecked());
+              if (value.IsJust()) {
+                curr = curr->next;
+              } else {
+                curr = NULL;
+                isValid = false;
+              }
+            }
+
+            // stop the loop if we found an invalid value
+            if (!isValid) {
+              break;
+            }
           }
         }
 
-        curl_slist_free_all(linkedList);
+        if (isValid) {
+          retVal = arr;
+        } else {
+          Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+        }
       }
+    } else {
+      code = curl_easy_getinfo(obj->ch, curlInfo, &linkedList);
 
-      if (isValid) {
-        retVal = arr;
-      } else {
-        Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+      if (code == CURLE_OK) {
+        v8::Local<v8::Array> arr = Nan::New<v8::Array>();
+        bool isValid = true;
+
+        if (linkedList) {
+          curr = linkedList;
+
+          while (curr) {
+            auto value = arr->Set(arr->CreationContext(), arr->Length(),
+                                  Nan::New<v8::String>(curr->data).ToLocalChecked());
+            if (value.IsJust()) {
+              curr = curr->next;
+            } else {
+              curr = NULL;
+              isValid = false;
+            }
+          }
+
+          curl_slist_free_all(linkedList);
+        }
+
+        if (isValid) {
+          retVal = arr;
+        } else {
+          Nan::ThrowError("Something went wrong while trying to retrieve info from curl slist");
+        }
       }
     }
   }

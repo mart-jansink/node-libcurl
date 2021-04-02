@@ -390,9 +390,9 @@ inherits@2, inherits@~2.0.3:
   integrity sha512-k/vGaX4/Yla3WzyMCvTQOXYeIHvqOKtnqBduzTHpzpQZzAskKMhZ2K+EnBiSM9zGSoIFeMpXKxa4dYeZIQqewQ==
 
 ini@~1.3.0:
-  version "1.3.5"
-  resolved "https://registry.npmjs.org/ini/-/ini-1.3.5.tgz#eee25f56db1c9ec6085e0c22778083f596abf927"
-  integrity sha512-RZY5huIKCMRWDUqZlEi72f/lmXKMvuszcMBduliQ3nnWbx9X/ZBQO7DijMEYS9EhHBb2qacRUMtC7svLwe0lcw==
+  version "1.3.8"
+  resolved "https://registry.yarnpkg.com/ini/-/ini-1.3.8.tgz#a29da425b48806f34767a4efce397269af28432c"
+  integrity sha512-JV/yugV2uzW5iMRSiZAyDtQd+nxtUnjeLt0acNdw98kKLrvuRVyB80tsREOE7yvGVgalhZ6RNXCmEHkUKBKxew==
 
 is-fullwidth-code-point@^1.0.0:
   version "1.0.0"
@@ -562,10 +562,10 @@ node-gyp@7.0.0:
     tar "^6.0.1"
     which "^2.0.2"
 
-node-libcurl@next:
-  version "2.2.0-1"
-  resolved "https://registry.npmjs.org/node-libcurl/-/node-libcurl-2.2.0-1.tgz#db412982210ac9297058d5f56c66c29133d33cef"
-  integrity sha512-s/AxTsU7qPK/h/xMFUI2OeQtHR1cm5hUROESGPYxzy5xVb82a7S4CkhvhIZM8tVc/FCxyWvuWyWgdoUqISnG3g==
+node-libcurl@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/node-libcurl/-/node-libcurl-2.2.0.tgz#911d8cc0fd66f73b358be7d44b3c19bd02124679"
+  integrity sha512-dyv3IuQBqO4KK5ojtM4k6FuBA3RxZjTqO4c+MUirwvlTY7qIH2oNSws8Xte1pp2aso9TuXyAwxS/g3ZqmAk8aA==
   dependencies:
     env-paths "2.2.0"
     nan "2.14.1"

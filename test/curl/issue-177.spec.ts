@@ -7,12 +7,12 @@ describe('issues', function () {
 
   it('issue-177 - node.js microtasks interference', async () => {
     const testStartTime = process.hrtime()
-    const timeout = setTimeout(() => {}, 15000)
+    const timeout = setTimeout(() => void 0, 15000)
     const makeCall = () =>
       new Promise((resolve, reject) => {
         const curl = new Curl()
 
-        curl.setOpt('URL', 'http://localhost:8080')
+        curl.setOpt('URL', '10.255.255.1')
         curl.setOpt('CONNECTTIMEOUT', 1)
         curl.setOpt('TIMEOUT', 1)
 
@@ -23,7 +23,7 @@ describe('issues', function () {
 
         curl.on('end', () => {
           curl.close()
-          resolve()
+          resolve(void 0)
         })
 
         curl.perform()

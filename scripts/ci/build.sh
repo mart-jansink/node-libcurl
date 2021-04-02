@@ -52,6 +52,17 @@ GSS_LIBRARY=${GSS_LIBRARY:-kerberos}
 # However we are going to build then anyway, they are not that slow to build.
 
 ###################
+# Build cares
+###################
+# c-ares is disabled at the moment due to this: https://github.com/JCMais/node-libcurl/issues/280
+# CARES_RELEASE=${CARES_RELEASE:-$(node -e "console.log(process.versions.ares || '1.16.1')")}
+# CARES_DEST_FOLDER=$PREFIX_DIR/deps/cares
+# echo "Building cares v$CARES_RELEASE"
+# ./scripts/ci/build-cares.sh $CARES_RELEASE $CARES_DEST_FOLDER >/dev/null
+# export CARES_BUILD_FOLDER=$CARES_DEST_FOLDER/build/$CARES_RELEASE
+# ls -al $CARES_BUILD_FOLDER/lib
+
+###################
 # Build libunistring
 ###################
 LIBUNISTRING_RELEASE=${LIBUNISTRING_RELEASE:-0.9.10}
@@ -174,6 +185,17 @@ export ZLIB_BUILD_FOLDER=$ZLIB_DEST_FOLDER/build/$ZLIB_RELEASE
 ls -al $ZLIB_BUILD_FOLDER/lib
 
 ###################
+# Build zstd
+###################
+# We could build this only if libcurl version >= 7.72
+ZSTD_RELEASE=${ZSTD_RELEASE:-1.4.9}
+ZSTD_DEST_FOLDER=$PREFIX_DIR/deps/zstd
+echo "Building zstd v$ZSTD_RELEASE"
+./scripts/ci/build-zstd.sh $ZSTD_RELEASE $ZSTD_DEST_FOLDER
+export ZSTD_BUILD_FOLDER=$ZSTD_DEST_FOLDER/build/$ZSTD_RELEASE
+ls -al $ZSTD_BUILD_FOLDER/lib
+
+###################
 # Build libssh2
 ###################
 LIBSSH2_RELEASE=${LIBSSH2_RELEASE:-1.9.0}
@@ -225,6 +247,7 @@ DISPLAY=${DISPLAY:-}
 PUBLISH_BINARY=${PUBLISH_BINARY:-}
 ELECTRON_VERSION=${ELECTRON_VERSION:-}
 NWJS_VERSION=${NWJS_VERSION:-}
+RUN_TESTS=${RUN_TESTS:-"true"}
 
 if [ -z "$PUBLISH_BINARY" ]; then
   PUBLISH_BINARY=false
@@ -259,7 +282,7 @@ if [ -n "$ELECTRON_VERSION" ]; then
   if [[ $is_electron_lt_5 -eq 1 && $has_display == "true" ]]; then
     run_tests_electron=true
 
-    yarn global add electron@${ELECTRON_VERSION}
+    yarn global add electron@${ELECTRON_VERSION} --network-timeout 300000
   fi
 
   # A possible solution to the above issue is the following,
@@ -298,16 +321,19 @@ target=`echo $target | sed 's/^v//'`
 # ia32, x64, armv7, etc
 target_arch=${TARGET_ARCH:-"x64"}
 
+NODE_LIBCURL_CPP_STD=${NODE_LIBCURL_CPP_STD:-"c++11"}
+
 # Build Addon
 export npm_config_curl_config_bin="$LIBCURL_DEST_FOLDER/build/$LIBCURL_RELEASE/bin/curl-config"
 export npm_config_curl_static_build="true"
+export npm_config_node_libcurl_cpp_std="$NODE_LIBCURL_CPP_STD"
 export npm_config_build_from_source="true"
 export npm_config_runtime="$runtime"
 export npm_config_dist_url="$dist_url"
 export npm_config_target="$target"
 export npm_config_target_arch="$target_arch"
 
-yarn install --frozen-lockfile
+yarn install --frozen-lockfile --network-timeout 300000
 
 if [ "$STOP_ON_INSTALL" == "true" ]; then
   set +uv
@@ -325,13 +351,15 @@ else
   ldd ./lib/binding/node_libcurl.node || true
 fi
 
-if [ -n "$ELECTRON_VERSION" ]; then
-  [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
-elif [ -n "$NWJS_VERSION" ]; then
-  echo "No tests available for node-webkit (nw.js)"
-else
-  yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
-  yarn test
+if [ "$RUN_TESTS" == "true" ]; then
+  if [ -n "$ELECTRON_VERSION" ]; then
+    [ $run_tests_electron == "true" ] && yarn test:electron || echo "Tests for this version of electron were disabled"
+  elif [ -n "$NWJS_VERSION" ]; then
+    echo "No tests available for node-webkit (nw.js)"
+  else
+    yarn ts-node -e "console.log(require('./lib').Curl.getVersionInfoString())" || true
+    yarn test
+  fi
 fi
 
 # If we are here, it means the addon worked
@@ -347,7 +375,7 @@ fi
 INSTALL_RESULT=0
 if [[ $PUBLISH_BINARY == true ]]; then
   echo "Publish binary is true - Testing if it was published correctly"
-  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile > /dev/null)$? || true
+  INSTALL_RESULT=$(npm_config_fallback_to_build=false yarn install --frozen-lockfile --network-timeout 300000 > /dev/null)$? || true
 fi
 if [[ $INSTALL_RESULT != 0 ]]; then
   echo "Failed to install package from npm after being published"

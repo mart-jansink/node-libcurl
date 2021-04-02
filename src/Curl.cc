@@ -409,6 +409,11 @@ const std::vector<CurlConstant> curlOptionString = {
     {"SSLKEY", CURLOPT_SSLKEY},
     {"SSLKEYTYPE", CURLOPT_SSLKEYTYPE},
     {"SSL_CIPHER_LIST", CURLOPT_SSL_CIPHER_LIST},
+
+#if NODE_LIBCURL_VER_GE(7, 73, 0)
+    {"SSL_EC_CURVES", CURLOPT_SSL_EC_CURVES},
+#endif
+
     {"TELNETOPTIONS", CURLOPT_TELNETOPTIONS},
 
 #if NODE_LIBCURL_VER_GE(7, 61, 0)
@@ -538,12 +543,16 @@ const std::vector<CurlConstant> curlInfoNotImplemented = {
     // Unnecessary.
     {"PRIVATE", CURLINFO_PRIVATE},
     // Maybe
-    {"CERTINFO", CURLINFO_CERTINFO},
 };
 
 const std::vector<CurlConstant> curlInfoString = {
     {"CONTENT_TYPE", CURLINFO_CONTENT_TYPE},
     {"EFFECTIVE_URL", CURLINFO_EFFECTIVE_URL},
+
+#if NODE_LIBCURL_VER_GE(7, 72, 0)
+    {"EFFECTIVE_METHOD", CURLINFO_EFFECTIVE_METHOD},
+#endif
+
     {"FTP_ENTRY_PATH", CURLINFO_FTP_ENTRY_PATH},
     {"LOCAL_IP", CURLINFO_LOCAL_IP},
     {"PRIMARY_IP", CURLINFO_PRIMARY_IP},
@@ -620,6 +629,10 @@ const std::vector<CurlConstant> curlInfoInteger = {
 
     {"PROXYAUTH_AVAIL", CURLINFO_PROXYAUTH_AVAIL},
 
+#if NODE_LIBCURL_VER_GE(7, 73, 0)
+    {"PROXY_ERROR", CURLINFO_PROXY_ERROR},
+#endif
+
 #if NODE_LIBCURL_VER_GE(7, 52, 0)
     {"PROXY_SSL_VERIFYRESULT", CURLINFO_PROXY_SSL_VERIFYRESULT},
 #endif
@@ -642,6 +655,7 @@ const std::vector<CurlConstant> curlInfoSocket = {
 const std::vector<CurlConstant> curlInfoLinkedList = {
     {"SSL_ENGINES", CURLINFO_SSL_ENGINES},
     {"COOKIELIST", CURLINFO_COOKIELIST},
+    {"CERTINFO", CURLINFO_CERTINFO},
 };
 
 static void ExportConstants(v8::Local<v8::Object> obj,

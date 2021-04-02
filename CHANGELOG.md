@@ -9,6 +9,96 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Fixed
 ### Added
 ### Changed
+### Removed
+
+## [2.3.2] - 2021-03-24
+
+### Changed
+- The prebuilt binaries are not build with c-ares anymore, for reasoning see issue [#280](https://github.com/JCMais/node-libcurl/issues/280).
+  c-ares was included in the prebuilt binaries starting with `2.3.0`.
+
+## [2.3.1] - 2021-03-09
+
+The yes, `curly` is still experimental release. 😅
+
+If you are using `curly` in your project, and you want to share any feedback about it, please [post them in our Discord](https://discord.io/jonathancardoso). I would love to read and discuss it!
+
+### Fixed
+- Fixed not building zstd lib statically. [#274](https://github.com/JCMais/node-libcurl/issues/274)
+- Fixed download streams not working with responses that did not include a body. [#271](https://github.com/JCMais/node-libcurl/issues/271)
+ 
+### Added
+- Added prebuilt binaries for: Node.js 15, Electron v11, Electron v12, Nwjs 0.49.2, Nwjs 0.51.2, and Nwjs 0.52.0.
+
+### Changed
+- Building the addon from source now requires a C++ compiler with support for c++1z (c++17).
+
+### Removed
+- Removed prebuilt binaries for: Node.js 10, Electron v5, Electron v6, Electron v7, Nwjs v0.43, and Nwjs v0.44.
+
+## [2.3.0] - 2020-11-15
+
+Probably the last release that `curly` is considered experimental.
+
+### Breaking Change
+- `curly` (and `curly.<method>`) is now able to automatically parse the response body based on the content-type header of the response. [#240](https://github.com/JCMais/node-libcurl/issues/240)  
+  Default parsers for `application/json` (calls `JSON.parse`) and `text/*` (converts the raw `Buffer` to a string with `utf8` encoding) were added. This means that for responses without a matching content-type the raw `Buffer` will be returned. This is different from the previous behavior where a string would always be returned.
+  The default parsers can be overwritten by setting `curly.defaultResponseBodyParsers` to an object with the format:
+  ```
+  {
+    'content-type': (data: Buffer, headers: HeaderInfo[]) => any
+  }
+  ```
+  Where `content-type` can be one of these:
+  - the exact content-type.
+  - a pattern using `*` to match specific parts of the content-type, like `text/*`.
+  - a catch-all pattern: just `*`.
+
+  You can also override the parsers using the following options:
+  - `curlyResponseBodyParsers` object that will be merged with `defaultResponseBodyParsers`.
+  - `curlyResponseBodyParser` a parser that will be used for all responses.
+
+  It's also possible to set `curlyResponseBodyParser` to `false` and the data returned will always be the raw `Buffer`.
+
+  Of course, it is still possible to use your own `writeFunction` (libcurl `CURLOPT_WRITEFUNCTION` option) to set your own write callback and not rely on this default handling of the response.
+
+
+As `curly` is marked as experimental, this allows us to do a breaking change in a minor version bump. This release should make the curly API more stable and provide a better developer experience, however, the API remains experimental.
+
+### Fixed
+- Some `curly.<method>` calls not working correctly, to be more specific, all calls that were not `get`, `post` and `head`.
+- Errors thrown by the internal `Curl` instance used by `curly` not being re-thrown correctly.
+- Progress callbacks were not allowing to use default libcurl progress meter (by returning `CurlProgressFunc.Continue`).
+  
+### Added
+- Calling `curly.create(options)` will now return a new `curly` object that will use the passed `options` as defaults. [#247](https://github.com/JCMais/node-libcurl/issues/247)
+- TypeScript: `curly` (and `curly.<method>`) now accepts a generic type parameter which will be the type of the `data` returned. By default, this is set to `any`.
+- Added new options to the `curly` API:
+  - `curlyBaseUrl: string`, if set, their value will always be added as the prefix for the URL.
+  - `curlyLowerCaseHeaders: boolean`, if set to true, headers will be returned in lower case. Defaults to false. [#240](https://github.com/JCMais/node-libcurl/issues/240)
+- Added new methods and `CurlFeature` allowing the use of streams to upload and download data without having to set `WRITEFUNCTION` and/or `READFUNCTION` manually. [#237](https://github.com/JCMais/node-libcurl/issues/237)
+  - `Curl.setUploadStream`
+  - `Curl.setStreamProgress`
+  - `Curl.setStreamResponseHighWaterMark`
+  - `CurlFeature.StreamResponse`  
+  New options were also added to the `curly` API:
+  - `curlyProgressCallback`
+  - `curlyStreamResponse`
+  - `curlyStreamResponseHighWaterMark`
+  - `curlyStreamUpload`  
+  These new features related to streams are only reliable when using a libcurl version >= 7.69.1.
+- Support libcurl info `CURLINFO_CERTINFO`. Can be retrieved using `getInfo("CERTINFO")`. Thanks to [@Sergey-Mityukov](https://github.com/Sergey-Mityukov) for most of the work on this.
+- Support libcurl info `CURLINFO_EFFECTIVE_METHOD`. Requires libcurl >= 7.72.0.
+- Support libcurl info `CURLINFO_PROXY_ERROR`. Use `CurlPx` for constants. Requires libcurl >= 7.73.0.
+- Support libcurl option `CURLOPT_SSL_EC_CURVES`. Requires libcurl >= 7.73.0.
+- Added prebuilt binaries for Electron v10.1
+- The libcurl version being used by prebuilt binaries is now 7.73.0 and it's now built with c-ares.
+  
+### Changed
+- `curly` now has 100% code coverage.
+
+### Removed
+- Removed prebuilt binaries for: Electron v3, Electron v4, Nwjs v0.42, and Nwjs v0.43
 
 ## [2.2.0] - 2020-07-14
 ### Fixed
@@ -231,7 +321,10 @@ Special Thanks to [@koskokos2](https://github.com/koskokos2) for their contribut
 - Improved code style, started using prettier
 ## [1.2.0] - 2017-08-28
 
-[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...HEAD
+[Unreleased]: https://github.com/JCMais/node-libcurl/compare/v2.3.2...HEAD
+[2.3.2]: https://github.com/JCMais/node-libcurl/compare/v2.3.1...v2.3.2
+[2.3.1]: https://github.com/JCMais/node-libcurl/compare/v2.3.0...v2.3.1
+[2.3.0]: https://github.com/JCMais/node-libcurl/compare/v2.2.0...v2.3.0
 [2.2.0]: https://github.com/JCMais/node-libcurl/compare/v2.1.3...v2.2.0
 [2.1.3]: https://github.com/JCMais/node-libcurl/compare/v2.1.2...v2.1.3
 [2.1.2]: https://github.com/JCMais/node-libcurl/compare/v2.1.1...v2.1.2

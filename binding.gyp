@@ -9,8 +9,9 @@
     'curl_include_dirs%': '',
     'curl_libraries%': '',
     'curl_static_build%': 'false',
-    'curl_config_bin%': 'node <(module_root_dir)/tools/curl-config.js',
+    'curl_config_bin%': 'node <(module_root_dir)/scripts/curl-config.js',
     'node_libcurl_no_setlocale%': 'false',
+    'node_libcurl_cpp_std%': 'c++11',
   },
   'targets': [
     {
@@ -50,7 +51,12 @@
               # 4506 and 4838 -> about v8 inline function and narrowing
               # 4068 -> Unknown pragma (mostly GCC pragmas being used)
               # 4996 -> Declared wrongly Nan::Callback::Call
-              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996']
+              # 4309 -> 'static_cast': truncation of constant value on v8 header
+              'DisableSpecificWarnings': ['4244', '4506', '4068', '4838', '4996', '4309'],
+              'AdditionalOptions': [
+                '/std:<(node_libcurl_cpp_std)',
+                '/MP', #compile across multiple CPUs
+              ],
             },
             'VCLinkerTool': {
               'GenerateDebugInformation': 'true',
@@ -81,7 +87,7 @@
             }
           },
           'dependencies': [
-            '<!@(node "<(module_root_dir)/tools/retrieve-win-deps.js")'
+            '<!@(node "<(module_root_dir)/scripts/retrieve-win-deps.js")'
           ],
           'defines' : [
             'CURL_STATICLIB'
@@ -93,7 +99,7 @@
           ],
           'cflags_cc' : [
             '-O2',
-            '-std=c++11',
+            '-std=<(node_libcurl_cpp_std)',
             '-Wno-narrowing',
           ],
             # Allow C++ exceptions
@@ -109,7 +115,7 @@
           'conditions': [
             ['curl_include_dirs==""', {
               'include_dirs' : [
-                # '<!@(node "<(module_root_dir)/tools/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
+                # '<!@(node "<(module_root_dir)/scripts/curl-config.js" --cflags | sed "s/-D.* //g" | sed s/-I//g)'
                 '<!(<(curl_config_bin) --prefix)/include'
               ],
             }],
@@ -183,7 +189,7 @@
               }],
             ],
             'OTHER_CPLUSPLUSFLAGS':[
-              '-std=c++11','-stdlib=libc++',
+              '-std=<(node_libcurl_cpp_std)','-stdlib=libc++',
             ],
             'OTHER_LDFLAGS':[
               '-Wl,-bind_at_load',
@@ -193,7 +199,7 @@
             'GCC_ENABLE_CPP_EXCEPTIONS': 'YES',
             'MACOSX_DEPLOYMENT_TARGET':'10.12',
             'CLANG_CXX_LIBRARY': 'libc++',
-            'CLANG_CXX_LANGUAGE_STANDARD':'c++11',
+            'CLANG_CXX_LANGUAGE_STANDARD':'<(node_libcurl_cpp_std)',
             'OTHER_LDFLAGS': ['-stdlib=libc++'],
             'WARNING_CFLAGS':[
               '-Wno-c++11-narrowing',

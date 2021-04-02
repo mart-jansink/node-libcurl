@@ -7,9 +7,9 @@ osx_image: xcode9.4
 dist: trusty
 language: node_js
 node_js:
+  - '15'
   - '14'
   - '12'
-  - '10'
 addons:
   apt:
     sources:
@@ -24,31 +24,27 @@ matrix:
   #   - node_js: "11"
   include:
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=9.1.0
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=12.0.0
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=8.1.1
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=11.2.3
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=7.1.14
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=10.1.0
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=6.1.9
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=9.3.3
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=5.0.13
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 ELECTRON_VERSION=8.5.3
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=4.2.12
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 NWJS_VERSION=0.52.0
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 ELECTRON_VERSION=3.1.13
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 NWJS_VERSION=0.51.2
     - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 NWJS_VERSION=0.44.5
-    - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 NWJS_VERSION=0.43.6
-    - os: osx
-      env: LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1 NWJS_VERSION=0.42.6
+      env: LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0 NWJS_VERSION=0.49.2
 env:
   global:
     - GCC_VERSION=4.8
     - secure: d64E8XbVGHuQ0kls1oVUF1y6pnj3iqZB34roKBHAFTyWBXReC1FWLb+qEShCJicUDkeK2At7vQUz7ohMn2mL/hVXiRbuSaYuDKFx8iDeei9mTgE+iy258mSovnNvXfG72EP5+LB+UOhgmTGe0qyTALOQ6ceCgjdscul3IGWE8lw=
   matrix:
-    - LIBCURL_RELEASE=7.69.1 LATEST_LIBCURL_RELEASE=7.69.1
+    - LIBCURL_RELEASE=7.73.0 LATEST_LIBCURL_RELEASE=7.73.0
     - LIBCURL_RELEASE=7.50.0
 
 cache:
@@ -66,6 +62,13 @@ git:
   depth: 10
   submodules: false
 
+# disable redundancy when building PRs
+branches:
+  only:
+    - master
+    - develop
+    - /^v\d+\.\d+(\.\d+)?(-\S*)?$/
+
 before_install:
   # Use latest yarn
   - curl -o- -L https://yarnpkg.com/install.sh | bash -s -- --version 1.15.2
@@ -75,6 +78,9 @@ before_install:
     export CXX="g++-${GCC_VERSION}";
     export LINK="gcc-${GCC_VERSION}";
     export LINKXX="g++-${GCC_VERSION}";
+    fi
+  - if [[ $TRAVIS_PULL_REQUEST != "false" ]]; then
+    export PUBLISH_BINARY="false";
     fi
   - export PATH=$HOME/bin:$PATH
   - yarn --version
